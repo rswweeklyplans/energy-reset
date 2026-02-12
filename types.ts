@@ -12,6 +12,11 @@ export interface DayData {
 
 export type TrackerState = Record<number, DayData>;
 
+export interface ResetProgram {
+  startDate: string | null;
+  trackerState: TrackerState;
+}
+
 export interface MealOption {
   title: string;
   items: string[];

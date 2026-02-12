@@ -9,12 +9,17 @@ const App: React.FC = () => {
   const [trackerState, setTrackerState] = useState<TrackerState>({});
   const [activeTab, setActiveTab] = useState('guide');
   const [expandedMeal, setExpandedMeal] = useState<string | null>(null);
+  const [startDate, setStartDate] = useState<string | null>(null);
 
   // Load from local storage
   useEffect(() => {
     const saved = localStorage.getItem('energyReset_v2');
     if (saved) {
       setTrackerState(JSON.parse(saved));
+    }
+    const savedStartDate = localStorage.getItem('energyReset_startDate');
+    if (savedStartDate) {
+      setStartDate(savedStartDate);
     }
   }, []);
 
@@ -27,8 +32,15 @@ const App: React.FC = () => {
   const handleReset = () => {
     if (confirm("Reset everything? Your hard work will be cleared.")) {
       setTrackerState({});
+      setStartDate(null);
       localStorage.removeItem('energyReset_v2');
+      localStorage.removeItem('energyReset_startDate');
     }
+  };
+
+  const handleStartDateChange = (date: string) => {
+    setStartDate(date);
+    localStorage.setItem('energyReset_startDate', date);
   };
 
   const stats = useMemo(() => {
@@ -90,10 +102,10 @@ const App: React.FC = () => {
       </nav>
 
       {/* Main Container */}
-      <main className="max-w-5xl mx-auto px-4 py-12 md:px-8">
+      <main className="max-w-5xl mx-auto px-6 py-12 md:px-8">
         
         {activeTab === 'guide' && (
-          <div className="max-w-3xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <div className="max-w-3xl mx-auto space-y-8 md:space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
             <section className="prose prose-stone prose-lg max-w-none">
               <h2 className="text-3xl md:text-5xl font-bold text-stone-800 border-b border-stone-200 pb-6 italic">I'm so glad you're here.</h2>
               
@@ -158,9 +170,9 @@ const App: React.FC = () => {
         )}
 
         {activeTab === 'tracker' && (
-          <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <div className="space-y-8 md:space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Stats Dashboard */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
               <StatCard label="Progress" value={stats.count} suffix="/14 Days" />
               <StatCard label="Avg Sleep" value={stats.avgSleep} suffix="/10" color="text-indigo-600" />
               <StatCard label="Energy" value={stats.avgEnergy} suffix="/10" color="text-[#c17a5c]" />
@@ -169,17 +181,22 @@ const App: React.FC = () => {
 
             <div className="grid lg:grid-cols-12 gap-8 items-start">
               <div className="lg:col-span-8">
-                <DayTracker state={trackerState} onSave={handleSaveDay} />
+                <DayTracker
+                  state={trackerState}
+                  onSave={handleSaveDay}
+                  startDate={startDate}
+                  onStartDateChange={handleStartDateChange}
+                />
               </div>
               <div className="lg:col-span-4 space-y-6">
                 <div className="bg-white p-6 rounded-2xl border border-stone-100 shadow-sm">
                    <h3 className="font-bold text-stone-800 mb-2 uppercase text-xs tracking-widest">Energy Trends</h3>
                    <p className="text-stone-500 text-xs mb-4 italic">Tracking your daily average energy (AM + PM).</p>
-                   <div className="h-48 w-full">
+                   <div className="h-40 md:h-48 w-full">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={chartData}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                        <XAxis dataKey="name" fontSize={10} axisLine={false} tickLine={false} />
+                        <XAxis dataKey="name" fontSize={12} axisLine={false} tickLine={false} />
                         <Tooltip 
                           cursor={{fill: '#f5f5f5'}}
                           contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)'}}
@@ -201,9 +218,9 @@ const App: React.FC = () => {
                   </p>
                 </div>
 
-                <button 
+                <button
                   onClick={handleReset}
-                  className="w-full py-4 text-[10px] font-black text-stone-400 hover:text-red-500 transition-colors uppercase tracking-[0.2em]"
+                  className="w-full py-4 text-xs font-black text-stone-400 hover:text-red-500 transition-colors uppercase tracking-[0.2em]"
                 >
                   Reset All Data
                 </button>
@@ -213,7 +230,7 @@ const App: React.FC = () => {
         )}
 
         {activeTab === 'meals' && (
-          <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <div className="space-y-8 md:space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
              <div className="text-center max-w-2xl mx-auto">
                <h2 className="text-4xl font-bold text-stone-800 mb-4">The Reset Kitchen</h2>
                <p className="text-stone-600 italic serif mb-6">Simple, protein-focused meals to stabilize blood sugar and keep energy high all day.</p>
@@ -289,7 +306,7 @@ const App: React.FC = () => {
         )}
 
         {activeTab === 'shopping' && (
-          <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <div className="space-y-8 md:space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
              <div className="text-center max-w-2xl mx-auto">
                <h2 className="text-4xl font-bold text-stone-800 mb-4">Master Shopping List</h2>
                <p className="text-stone-600 italic serif mb-6">Stock your kitchen with these high-vibrational foundations.</p>
@@ -318,9 +335,11 @@ const App: React.FC = () => {
                     <h3 className="bg-[#9fa894] text-white py-4 px-8 font-bold uppercase text-xs tracking-widest">{list.title}</h3>
                     <ul className="p-8 space-y-4">
                       {list.items.map(item => (
-                        <li key={item} className="flex items-center gap-4 text-stone-700 font-medium">
-                          <input type="checkbox" className="w-5 h-5 accent-olive-500 rounded border-stone-300" />
-                          <span className="text-sm">{item}</span>
+                        <li key={item} className="text-stone-700 font-medium">
+                          <label className="flex items-center gap-4 cursor-pointer">
+                            <input type="checkbox" className="w-6 h-6 accent-olive-500 rounded border-stone-300" />
+                            <span className="text-sm">{item}</span>
+                          </label>
                         </li>
                       ))}
                     </ul>
@@ -337,9 +356,9 @@ const App: React.FC = () => {
 
 const NavItem = ({ label, active, onClick }: { label: string, active: boolean, onClick: () => void }) => (
   <li className="flex-shrink-0">
-    <button 
+    <button
       onClick={onClick}
-      className={`px-4 md:px-8 py-5 text-[10px] md:text-xs font-black uppercase tracking-[0.2em] transition-all border-b-2
+      className={`px-4 md:px-8 py-5 text-xs md:text-sm font-black uppercase tracking-[0.2em] transition-all border-b-2
         ${active ? 'text-[#c17a5c] border-[#c17a5c]' : 'text-stone-500 border-transparent hover:text-stone-300'}
       `}
     >
@@ -364,7 +383,7 @@ const FocusCard = ({ title, items }: { title: string, items: string[] }) => (
 
 const StatCard = ({ label, value, suffix, color = "text-[#c17a5c]" }: { label: string, value: number | string, suffix?: string, color?: string }) => (
   <div className="bg-white p-6 rounded-2xl shadow-sm border border-stone-100 text-center transform hover:-translate-y-1 transition-transform">
-    <p className="text-[10px] uppercase font-black text-stone-400 tracking-widest mb-2">{label}</p>
+    <p className="text-xs uppercase font-black text-stone-400 tracking-widest mb-2">{label}</p>
     <div className={`text-3xl md:text-4xl font-black ${color}`}>
       {value}<span className="text-xs opacity-50 font-medium ml-1">{suffix}</span>
     </div>
